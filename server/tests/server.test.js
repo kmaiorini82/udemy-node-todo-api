@@ -1,14 +1,17 @@
 // Library imports
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 // Local imports
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo')
 
 const todosSeedData = [{
+    _id: new ObjectID(),
     text: 'First test todo'
 }, {
+    _id: new ObjectID(),
     text: 'Second test todo'
 }];
 
@@ -70,3 +73,35 @@ describe('GET /todos', () => {
             .end(done);
     });
 });
+
+describe('GET /todos/:id', () => {
+    it('should get todo by id', (done) => {
+        request(app)
+            .get(`/todos/${todosSeedData[0]._id.toHexString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.text).toBe(todosSeedData[0].text);
+            })
+            .end(done);
+    });
+
+    it('should return a 404 if todo not found', (done) => {
+        request(app)
+            .get(`/todos/${new ObjectID().toHexString()}`)
+            .expect(404)
+            .expect((res) => {
+                expect(res.body.message).toBe('No todo with that id');
+            })
+            .end(done)
+    });
+
+    it('should return a 404 if for non-object ids', (done) => {
+        request(app)
+            .get(`/todos/kjm`)
+            .expect(404)
+            .expect((res) => {
+                expect(res.body.message).toBe('Invalid todo id');
+            })
+            .end(done)
+    });
+})
