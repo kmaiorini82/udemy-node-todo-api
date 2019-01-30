@@ -12,7 +12,9 @@ const todosSeedData = [{
     text: 'First test todo'
 }, {
     _id: new ObjectID(),
-    text: 'Second test todo'
+    text: 'Second test todo',
+    completed: true,
+    completedAt: 333
 }];
 
 beforeEach((done) => {
@@ -122,7 +124,9 @@ describe('DELETE /todos/:id', () => {
                 var todoDeleted = JSON.parse(response.text);
 
                 Todo.findById(todoDeleted._id).then((todo) => {
-                    expect(todo).toNotExist();
+                    expect((res) => {
+                        expect(res).toNotExist()
+                    });
                     done();
                 }).catch((err) => done(err));
             });
@@ -146,5 +150,39 @@ describe('DELETE /todos/:id', () => {
                 expect(res.body.message).toBe('Invalid todo id');
             })
             .end(done)
+    });
+});
+
+describe('PATCH /todos/:id', () => {
+    it('should update the todo', (done) => {
+        var id = todosSeedData[0]._id;
+        var text = 'Test text';
+
+        request(app)
+            .patch(`/todos/${id}`)
+            .send({text, completed: true})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.text).toBe(text);
+                expect(res.body.completed).toBeTruthy();
+                expect(typeof res.body.completedAt).toBe('number');
+            })
+            .end(done);
+    });
+
+    it('should clear completedAt when todo is not completed', (done) => {
+        var id = todosSeedData[1]._id;
+        var text = 'Test text';
+
+        request(app)
+            .patch(`/todos/${id}`)
+            .send({text, completed: false})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.text).toBe(text);
+                expect(res.body.completed).toBeFalsy();
+                expect(res.body.completedAt).toBeNull();
+            })
+            .end(done);
     });
 });
