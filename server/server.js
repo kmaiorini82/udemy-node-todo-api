@@ -1,7 +1,10 @@
 // Library Impors
-var express = require('express');
-var bodyParser = require('body-parser');
-var {ObjectID} = require('mongodb');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
+
+
 
 // Local Imports
 var {mongoose} = require('./db/mongoose');
@@ -67,15 +70,32 @@ app.delete('/todos/:id', (req, res) => {
     });
 });
 
-// app.put('/todos', (req, res) => {
-//     var todo = new Todo({
-//         text: req.body.text
-//     });
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
 
-//     Todo.findByIdAndUpdate(todo._id).
-// }).catch((err) => {
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send({message: 'Invalid todo id'});
+    } 
 
-// });
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null; //Removes value from DB
+    }
+
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+        if(!todo) {
+            return res.status(404).send({message: 'No todo with that id'});
+        }
+        res.send(todo);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
+
+});
 
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
