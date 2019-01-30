@@ -38,7 +38,7 @@ app.get('/todos', (req, res) => {
 app.get('/todos/:id', (req, res) => {
     var id = req.params.id;
     if (!ObjectID.isValid(id)) {
-        return res.status(404).send({message: 'Invalid todo id'});
+        return res.status(400).send({message: 'Invalid todo id'});
     } 
 
     Todo.findById(id).then((todo) => {
@@ -50,6 +50,32 @@ app.get('/todos/:id', (req, res) => {
         res.status(500).send(err);
     });
 });
+
+app.delete('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    if (!ObjectID.isValid(id)) {
+        return res.status(400).send({message: 'Invalid todo id'});
+    } 
+
+    Todo.findByIdAndDelete(id).then((doc) => {
+        if(!doc) {
+            return res.status(404).send({message: 'No todo with that id'});
+        }
+        res.send(doc);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
+});
+
+// app.put('/todos', (req, res) => {
+//     var todo = new Todo({
+//         text: req.body.text
+//     });
+
+//     Todo.findByIdAndUpdate(todo._id).
+// }).catch((err) => {
+
+// });
 
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
