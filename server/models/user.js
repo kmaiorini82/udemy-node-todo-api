@@ -39,6 +39,7 @@ var UserSchema = new mongoose.Schema({
 // Not using arrow function because it doesn't 
 // bind this
 UserSchema.methods.generateAuthToken = function () {
+    // This binds individual document
     var user = this;
     var access = 'auth'
     var token = jwt.sign({_id: user._id.toHexString(), access},'abc123').toString();
@@ -53,6 +54,34 @@ UserSchema.methods.generateAuthToken = function () {
     });
 };
 
+// Allows for definition of model method
+// instead of instance method
+UserSchema.statics.findByToken = function (token) {
+    // This binds the model
+    var User = this;
+    var decoded;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch (e) {
+        // Only calling reject because this is a failure
+        // return new Promise((resolve, reject) => {
+        //     reject();
+        // });
+
+        return Promise.reject('User must be authorized');
+    }
+
+    // Using quotes because of ".".  This is allowing
+    // us to query the array of tokens
+    return User.findOne({
+        _id: decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
+};
+
+// Limit data being returned
 UserSchema.methods.toJSON = function () {
     return _.pick(this, ['_id', 'email']);
 };
