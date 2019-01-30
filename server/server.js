@@ -20,6 +20,7 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
+// TODOS
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         text: req.body.text
@@ -27,7 +28,7 @@ app.post('/todos', (req, res) => {
 
     todo.save().then((doc) => {
         res.send(doc);
-    }, (err) => {
+    }).catch((err) => {
         res.status(400).send(err);
     });
 });
@@ -35,7 +36,7 @@ app.post('/todos', (req, res) => {
 app.get('/todos', (req, res) => {
     Todo.find().then((todos) => {
         res.send({todos});
-    }, (err) => {
+    }).catch((err) => {
         res.status(400).send(err);
     });
     
@@ -98,6 +99,22 @@ app.patch('/todos/:id', (req, res) => {
         res.status(500).send(err);
     });
 
+});
+
+// USERS
+
+app.post('/users', (req, res) => {
+    var body = _.pick(req.body, ['email', 'password']);
+
+    var user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth', token).send(user);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
 });
 
 app.listen(port, () => {
