@@ -256,3 +256,58 @@ describe('POST /users', () => {
             .end(done);
     });
 });
+
+describe('POST /users/login', () => {
+    it('should login user and return auth token', (done) => {
+        request(app)
+            .post('/users/login')
+            .send({
+                email: usersSeedData[1].email,
+                password: usersSeedData[1].password
+            })
+            .expect(200)
+            .expect((res) => {
+                // Using brackets because of '-'
+                // will not allow . notation
+                expect(res.headers['x-auth']).toBeDefined();
+            })
+            .end((err, res) => {
+                if (err) return done(err);
+
+                User.findById(usersSeedData[1]._id).then((user) => {
+                    expect(user.tokens[0]).toMatchObject({
+                        access: 'auth',
+                        token: res.headers['x-auth']
+                    });
+                    done();
+                }).catch((err) => {
+                    done(err);
+                });
+            });
+    });
+
+    it('should reject invalid login', (done) => {
+        request(app)
+            .post('/users/login')
+            .send({
+                email: usersSeedData[1].email,
+                password: 'wrongpassword'
+            })
+            .expect(400)
+            .expect((res) => {
+                // Using brackets because of '-'
+                // will not allow . notation
+                expect(res.headers['x-auth']).not.toBeDefined();
+            })
+            .end((err, res) => {
+                if (err) return done(err);
+
+                User.findById(usersSeedData[1]._id).then((user) => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((err) => {
+                    done(err);
+                });
+            });
+    });
+});
