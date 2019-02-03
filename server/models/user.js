@@ -82,20 +82,41 @@ UserSchema.statics.findByToken = function (token) {
     });
 };
 
-UserSchema.pre('save', function(next) {
-    var user = this;
+UserSchema.pre('save', function() {
+    return new Promise((resolve, reject) => {
+        var user = this;
+        var errorMessage = {message: 'Unable to save user'};
 
-    if (user.isModified('password')) {
-        bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(user.password, salt, (err, hash) => {
-                user.password = hash;
-                next();
-            }); 
-        })
-    } else {
-        next();
-    }
+        if (user.isModified('password')) {
+            bcrypt.genSalt(10, (err, salt) => {
+                if(err) return reject(errorMessage);
+                bcrypt.hash(user.password, salt, (err, hash) => {
+                    if (err) return reject(errorMessage);
+                    user.password = hash;
+                    resolve();
+                });
+            });
+        } else {
+            resolve();
+        }
+    });
 });
+
+
+// UserSchema.pre('save', function(next) {
+//     var user = this;
+
+//     if (user.isModified('password')) {
+//         bcrypt.genSalt(10, (err, salt) => {
+//             bcrypt.hash(user.password, salt, (err, hash) => {
+//                 user.password = hash;
+//                 next();
+//             });
+//         });
+//     } else {
+//         next();
+//     }
+// });
 
 // Limit data being returned
 UserSchema.methods.toJSON = function () {

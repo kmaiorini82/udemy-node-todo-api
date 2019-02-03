@@ -28,7 +28,7 @@ app.post('/todos', (req, res) => {
     todo.save().then((doc) => {
         res.send(doc);
     }).catch((err) => {
-        res.status(400).send(err);
+        res.status(400).send({message: err});
     });
 });
 
@@ -36,7 +36,7 @@ app.get('/todos', (req, res) => {
     Todo.find().then((todos) => {
         res.send({todos});
     }).catch((err) => {
-        res.status(400).send(err);
+        res.status(400).send({message: err});
     });
     
 });
@@ -53,7 +53,7 @@ app.get('/todos/:id', (req, res) => {
         } 
         res.send(todo);
     }).catch((err) => {
-        res.status(500).send(err);
+        res.status(500).send({message: err});
     });
 });
 
@@ -69,7 +69,7 @@ app.delete('/todos/:id', (req, res) => {
         }
         res.send(doc);
     }).catch((err) => {
-        res.status(500).send(err);
+        res.status(500).send({message: err});
     });
 });
 
@@ -95,7 +95,7 @@ app.patch('/todos/:id', (req, res) => {
         }
         res.send(todo);
     }).catch((err) => {
-        res.status(500).send(err);
+        res.status(500).send({message: err});
     });
 
 });
@@ -112,7 +112,7 @@ app.post('/users', (req, res) => {
     }).then((token) => {
         res.header('x-auth', token).send(user);
     }).catch((err) => {
-        res.status(500).send(err);
+        res.status(500).send({message: err});
     });
 });
 
