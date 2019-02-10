@@ -125,7 +125,8 @@ app.post('/users/login', (req, res) => {
 
     User.findByCredentials(body.email, body.password).then((user) => {
         // Not used like POST /users above, with chaining, because
-        // want to leverage user variable.
+        // want to leverage user variable.  Return would catch
+        // errors.  Success procees into then here.
         return user.generateAuthToken().then((token) => {
             res.header('x-auth', token).send(user);
         });
@@ -133,6 +134,15 @@ app.post('/users/login', (req, res) => {
         res.status(400).send(err);
     });
 });
+
+app.delete('/users/me/token', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send();
+    }).catch((error) => {
+        res.status(400).send();
+    });
+});
+
 
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
